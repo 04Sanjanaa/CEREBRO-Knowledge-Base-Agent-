@@ -2,14 +2,42 @@
 
 Intelligent Knowledge Base Query System with React frontend and Flask backend.
 
+## Overview
+
+CEREBRO is a full-stack Knowledge Base Agent that allows employees to ask natural-language questions about company policies.
+The system searches through HR documents, handbooks, and guidelines using vector similarity to retrieve the most relevant answers.
+
+This agent supports:
+-Natural language queries
+-Document search
+-Log analytics
+-System metrics
+-Multi-document embeddings
+
 ## Features
 
-- **Chat Interface**: Ask natural language questions about company policies
-- **Document Management**: Browse and search indexed documents
-- **Query Logging**: Track and export all queries with analytics
-- **System Analytics**: Monitor system performance and query statistics
-- **Semantic Search**: Keyword-based document retrieval
-- **Multi-Source Citations**: View source documents for answers
+### Core Functionality
+-Chat-based Query Interface for policy questions
+-Semantic Vector Search using embeddings
+-Document Browser to explore indexed content
+-Query Logging with timestamps & metadata
+-System Analytics Dashboard
+-Source Citations for transparency
+
+### Additional Capabilities
+-Fast vector search (ChromaDB / FAISS)
+-Modular backend architecture
+-Fully responsive React UI
+-Separate frontend & backend deployment
+
+
+### Limitations 
+-Only answers questions from indexed documents
+-No generative reasoning (not GPT-style answers)
+-English-only and limited to current document set
+-Not optimized for thousands of documents
+-No user accounts or role-based access
+-Requires re-indexing when adding new documents
 
 ## Tech Stack
 
@@ -18,12 +46,14 @@ Intelligent Knowledge Base Query System with React frontend and Flask backend.
 - Tailwind CSS for styling
 - Lucide React for icons
 - Axios for API communication
+- Deployment: Vercel
 
 ### Backend
 - Flask REST API
 - Python 3.9+
 - SQLite database
 - Vector-based search
+- Deployment Render
 
 ## Project Structure
 
@@ -72,65 +102,66 @@ AI_Agent/
 
 ```
 
-## Architecture Diagram
+## Architecture Diagram    
+                        ┌───────────────────────────────┐
+                        │            USER (UI)           │
+                        │      React Frontend (Vercel)   │
+                        │  • Chat Interface              │
+                        │  • Document Browser            │
+                        │  • Query Logs Dashboard        │
+                        └───────────────────────────────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────────┐
+                        │      HTTPS API CALLS (Axios)   │
+                        │   /api/query  /api/search      │
+                        │   /api/logs   /api/documents   │
+                        └───────────────────────────────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────────┐
+                        │       BACKEND (Flask API)      │
+                        │   • Receives queries           │
+                        │   • Calls Search Engine        │
+                        │   • Formats + returns results  │
+                        │   Endpoints:                   │
+                        │      GET  /api/logs            │
+                        │      GET  /api/stats           │
+                        │      POST /api/query           │
+                        │      POST /api/search          │
+                        └───────────────────────────────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────────┐
+                        │        SERVICES LAYER          │
+                        │  1. Search Service             │
+                        │     • Loads embeddings         │
+                        │     • Performs vector search   │
+                        │     • Returns top-K results    │
+                        │                               │
+                        │  2. Logger Service             │
+                        │     • Stores every query       │
+                        │     • Generates analytics      │
+                        └───────────────────────────────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────────┐
+                        │       VECTOR DATABASE          │
+                        │     (ChromaDB / FAISS)         │
+                        │  • Stores embeddings           │
+                        │  • Fast similarity search      │
+                        │  • Index built using           │
+                        │    index_documents.py          │
+                        └───────────────────────────────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────────┐
+                        │       DOCUMENT STORAGE         │
+                        │   • /data/documents/*.pdf      │
+                        │   • /txt /md /docx files       │
+                        │   • Raw HR & policy data       │
+                        └───────────────────────────────┘
 
-┌──────────────────────────────────────────────────────┐
-│                       USER (Frontend)                 │
-│                 React Web Application                 │
-│  - Chat Interface                                     │
-│  - Document Browser                                   │
-│  - Query Logs View                                    │
-│  - System Info Dashboard                              │
-└───────────────▲───────────────────────────────────────┘
-                │  HTTPS API Calls (Axios)
-                │  /api/query /api/search /api/logs
-                │
-┌───────────────┴───────────────────────────────────────┐
-│                   BACKEND (Flask API)                 │
-│  - Receives user query                                │
-│  - Calls Search Service                                │
-│  - Generates semantic matches                           │
-│  - Formats & returns response                          │
-│                                                        │
-│   Endpoints:                                           │
-│   • GET /api/documents                                 │
-│   • POST /api/search                                   │
-│   • POST /api/query                                    │
-│   • GET /api/logs                                      │
-│   • GET /api/stats                                     │
-└───────────────▲───────────────────────────────────────┘
-                │ Calls internal services
-                │
-┌───────────────┴───────────────────────────────────────┐
-│                     SERVICES LAYER                     │
-│                                                        │
-│ 1. Search Service                                      │
-│    - Loads embeddings                                  │
-│    - Performs vector similarity search                 │
-│    - Returns top-K document chunks                     │
-│                                                        │
-│ 2. Logger Service                                      │
-│    - Saves every query                                 │
-│    - Generates query analytics                         │
-└───────────────▲───────────────────────────────────────┘
-                │ Reads/Writes
-                │
-┌───────────────┴───────────────────────────────────────┐
-│                     VECTOR DATABASE                    │
-│         (Embeddings stored in SQLite / custom DB)      │
-│   - Documents are pre-processed and embedded           │
-│   - Vector index supports fast semantic queries        │
-└───────────────▲───────────────────────────────────────┘
-                │ Loaded using index_documents.py
-                │
-┌───────────────┴───────────────────────────────────────┐
-│                   DOCUMENT STORAGE                     │
-│        /data/documents/*.pdf / .txt / .md files        │
-│   - Raw company policies                               │
-│   - Onboarding manual                                  │
-│   - Leave policy                                       │
-│   - HR/IT guidelines                                   │
-└────────────────────────────────────────────────────────┘
 
 This architecture represents a full-stack Knowledge Base Agent built with a React
 frontend and Flask backend. Users interact with the system through a chat interface, document browser, and analytics dashboard. All user queries are sent to the Flask API, which processes them through two service modules: the Search Service (responsible for semantic similarity search on vector embeddings) and the Logger Service (responsible for tracking and exporting query logs).
@@ -147,54 +178,36 @@ Documents are pre-processed using `index_documents.py`, which generates embeddin
 
 ### Backend Setup
 
-1. **Install Python dependencies**:
-```bash
-cd backend
-pip install -r requirements.txt
-```
+ cd backend
+ pip install -r requirements.txt
+ cp .env.example .env
+ python app.py
 
-2. **Create environment file**:
-```bash
-cp .env.example .env
-```
-
-3. **Run Flask server**:
-```bash
-python app.py
-```
 
 Server will start on `http://localhost:5000`
 
 ### Frontend Setup
 
-1. **Install npm dependencies**:
-```bash
 cd frontend
 npm install
-```
-
-2. **Start React development server**:
-```bash
 npm start
-```
 
-App will open at `http://localhost:3000`
 
 ## API Endpoints
 
-### Health Check
-- `GET /api/health` - Check API status
+### Queries
+- POST /api/query — ask a question
+- POST /api/search — search documents
 
 ### Documents
-- `GET /api/documents` - List all indexed documents
-- `POST /api/search` - Search documents by query
+- GET /api/documents
 
-### Queries
-- `POST /api/query` - Submit a query and get response
-- `GET /api/logs` - Get all query logs
+### Logs
+- GET /api/logs
 
-### Analytics
-- `GET /api/stats` - Get system statistics
+### System
+- GET /api/stats
+- GET /api/health
 
 ## Sample Documents
 
@@ -218,37 +231,29 @@ See `.env.example` for all available configuration options:
 
 ## Usage
 
-1. **Ask a Question**: Type a question in the chat interface about company policies
-2. **Browse Documents**: Visit the Documents tab to explore all available documents
-3. **View Query History**: Check the Query Logs tab to see previous questions
-4. **Monitor System**: Visit System Info to view statistics and system health
+1. Open the web UI
+2. Ask a natural-language policy question
+3. System performs vector search
+4. Top relevant sections returned with citations
+5. View logs and system stats in the dashboard
 
-## Development
-
-### Running Tests
-
-Backend:
-```bash
-cd backend
-python -m pytest
-```
-
-Frontend:
-```bash
-cd frontend
-npm test
-```
-
-### Building for Production
-
-Frontend:
-```bash
-cd frontend
-npm run build
-```
 
 ## Deployment
 
+- Backend Tests
+cd backend
+pytest
+
+- Frontend Tests
+cd frontend
+npm test
+
+- Detailed steps in docs/DEPLOYMENT.md.
+
+# Deployment Platforms:
+
+- Frontend → Vercel
+- Backend → Render
 See `docs/DEPLOYMENT.md` for detailed deployment instructions.
 
 ## Contributing
@@ -274,13 +279,13 @@ For support, questions, or issues:
 
 ## Roadmap
 
-- [ ] Multi-language support
-- [ ] Advanced NLP query processing
-- [ ] Integration with external knowledge bases
-- [ ] User authentication and roles
-- [ ] Real-time document updates
-- [ ] Mobile app version
-- [ ] Advanced analytics dashboard
+- Multi-language support
+- Advanced NLP query processing
+- Integration with external knowledge bases
+- User authentication and roles
+- Real-time document updates
+- Mobile app version
+- Advanced analytics dashboard
 
 ## Changelog
 
